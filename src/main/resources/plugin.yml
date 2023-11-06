@@ -1,0 +1,3 @@
+name: FallBackCore
+version: '${project.version}'
+main: com.xiii.fallbackcore.FallBackCore
