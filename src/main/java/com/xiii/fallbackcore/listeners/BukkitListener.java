@@ -20,10 +20,9 @@ import java.net.Socket;
 
 public class BukkitListener implements Listener {
 
-    private static final String gteamPrefix = "§b§lGTeam §7»§r§f ";
-
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onJoin(final PlayerJoinEvent e) {
+
         e.setJoinMessage("");
 
         //Hide all players
@@ -31,16 +30,10 @@ public class BukkitListener implements Listener {
             e.getPlayer().hidePlayer(p);
         }
 
+        // Clear player's chat
         for (int i = 0; i <= 100; i++) {
             e.getPlayer().sendMessage(" ");
         }
-
-        // Main status
-        boolean mainStatus = false;
-        try {
-            new Socket().connect(new InetSocketAddress("192.168.1.250", 25570), 1000);
-            mainStatus = true;
-        } catch (final IOException ignored) {}
 
         e.getPlayer().sendMessage("§e§l      ✿§r §6§lWELCOME TO§1§l §b§lGTEAM'S§6§l NETWORK§e§l ✿");
         e.getPlayer().sendMessage(" ");
@@ -48,47 +41,75 @@ public class BukkitListener implements Listener {
         e.getPlayer().sendMessage(" ");
         e.getPlayer().sendMessage("  - Proxy: §aOnline");
         e.getPlayer().sendMessage("  - FallBack: §aOnline");
-        e.getPlayer().sendMessage("  - Main: " + (mainStatus ? "§aOnline" : "§cOffline"));
+
+        // Check Main server status
+        try (final Socket mainSocket = new Socket()) {
+
+            mainSocket.connect(new InetSocketAddress("192.168.1.250", 25570), 1000);
+
+            e.getPlayer().sendMessage("  - Main: §aOnline");
+
+        } catch (final IOException ignored) {
+
+            e.getPlayer().sendMessage("  - Main: §cOffline");
+
+        }
+
         e.getPlayer().sendMessage(" ");
-        e.getPlayer().sendMessage("     §a§oYou are playing on GTeam's Network. 1.8.x-1.21.1 !");
+        e.getPlayer().sendMessage("     §a§oYou are playing on GTeam's Network. 1.7.10-1.21.3 !");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onQuit(final PlayerQuitEvent e) {
-        e.setQuitMessage("");
+    public void onQuit(final PlayerQuitEvent event) {
+        event.setQuitMessage("");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onChat(final AsyncPlayerChatEvent e) {
-        if (!e.getPlayer().isOp()) e.setCancelled(true);
+    public void onChat(final AsyncPlayerChatEvent event) {
+        if (!event.getPlayer().isOp()) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onCommand(final PlayerCommandPreprocessEvent e) {
-        if (!e.getPlayer().isOp()) e.setCancelled(true);
+    public void onCommand(final PlayerCommandPreprocessEvent event) {
+        if (!event.getPlayer().isOp()) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockDamage(final BlockDamageEvent e) {
-        if (!e.getPlayer().isOp()) e.setCancelled(true);
+    public void onBlockDamage(final BlockDamageEvent event) {
+        if (!event.getPlayer().isOp() && event.getBlock().getType() != Material.SIGN) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onPlayerInteract(final PlayerInteractEvent e) {
-        final Block block = e.getClickedBlock();
-        final Material myBlock = block.getType();
-        if (myBlock.equals(Material.SIGN_POST) || myBlock.equals(Material.WALL_SIGN)) {
-            final Sign sign = (Sign) block.getState();
-            final String[] ln = sign.getLines();
-            if(ln[0].toLowerCase().contains("[connect ->")) {
-                sendPlayerToServer(e.getPlayer(), "main");
+    public void onPlayerInteract(final PlayerInteractEvent event) {
+
+        final Block block = event.getClickedBlock();
+
+        if (block != null) {
+
+            final Material myBlock = block.getType();
+
+            if (myBlock == Material.SIGN_POST || myBlock == Material.WALL_SIGN) {
+
+                final Sign sign = (Sign) block.getState();
+                final String[] lines = sign.getLines();
+
+                if (lines.length > 0 && "x-x SERVER x-x".equalsIgnoreCase(lines[0])) {
+
+                    sendPlayerToServer(event.getPlayer(), lines[2].toLowerCase());
+
+                }
             }
         }
+
     }
 
-    public void sendPlayerToServer(final Player player, final String server) {
+    private void sendPlayerToServer(final Player player, final String server    ) {
 
-        player.sendMessage(gteamPrefix + "Connecting to '" + server + "', please wait...");
+        final String prefix = "§b§lGTeam §7»§r§f ";
+
+        player.sendMessage(" ");
+        player.sendMessage(prefix + "Connecting to '" + server + "', please wait...");
+        player.sendMessage(" ");
 
         try {
 
@@ -103,12 +124,8 @@ public class BukkitListener implements Listener {
             b.close();
             out.close();
 
-            for (int i = 0; i <= 100; i++) {
-                player.sendMessage(" ");
-            }
-        }
-        catch (final Exception e) {
-            player.sendMessage(gteamPrefix + "An error occurred when connecting to '" + server + "'. Is the server online?");
+        } catch (final Exception ignored) {
+            player.sendMessage(prefix + "An error occurred when connecting to '" + server + "'. Is the server online?");
         }
     }
 }

@@ -10,15 +10,17 @@ public final class FallBackCore extends JavaPlugin {
 
     @Override
     public void onEnable() {
+
         INSTANCE = this;
+
         Bukkit.getServer().getPluginManager().registerEvents(new BukkitListener(), this);
+
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
     }
 
     @Override
-    public void onDisable() {
-        Bukkit.getScheduler().cancelTasks(this);
-    }
+    public void onDisable() {}
 
     public static FallBackCore getInstance() {
         return INSTANCE;
