@@ -11,6 +11,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockDamageEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.weather.WeatherChangeEvent;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -77,6 +78,11 @@ public class BukkitListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockDamage(final BlockDamageEvent event) {
         if (!event.getPlayer().isOp() && event.getBlock().getType() != Material.SIGN) event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onWeatherChange(final WeatherChangeEvent event) {
+        event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
